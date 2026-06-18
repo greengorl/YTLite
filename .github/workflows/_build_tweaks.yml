@@ -95,23 +95,31 @@ jobs:
         run: |
           TWEAK_VERSION="${{ inputs.tweak_version }}"
           echo "::notice::Building YTLite from source as ${TWEAK_VERSION}-free"
-          echo "PWD: $(pwd)"
-          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
-          echo "Workspace contents:"
-          ls -la "${GITHUB_WORKSPACE}"
-          echo "---"
           cd "${GITHUB_WORKSPACE}"
           # Tag the build with a -free suffix so it's identifiable and won't clash
           # with any installed subscription build of the same version.
           sed -i '' "s/^PACKAGE_VERSION = .*/PACKAGE_VERSION = ${TWEAK_VERSION}-free/" Makefile
           sed -i '' "s/^Version: .*/Version: ${TWEAK_VERSION}-free/" control
+          # Provide a shim for roothide.h (Utils/NSBundle+YTLite.m uses jbroot()).
+          # The roothide jailbreak SDK is not bundled with stock Theos, so we
+          # drop in a minimal header that maps jbroot to the /var/jb prefix used
+          # by rootless jailbreaks. Functionally equivalent for this tweak.
+          cat > "$THEOS/include/roothide.h" <<'EOF'
+          #ifndef ROOTHIDE_H
+          #define ROOTHIDE_H
+          #import <Foundation/Foundation.h>
+          NS_INLINE NSString* jbroot(NSString* path) {
+            return [@"/var/jb" stringByAppendingPathComponent:path];
+          }
+          #endif
+          EOF
           # YouTubeHeader is required by YouTubeHeaders.h (included from YTLite.h)
           if [ ! -d "$THEOS/include/YouTubeHeader" ]; then
             git clone --quiet --depth=1 https://github.com/PoomSmart/YouTubeHeader.git "$THEOS/include/YouTubeHeader"
           else
             (cd "$THEOS/include/YouTubeHeader" && git pull --depth=1 --quiet)
           fi
-          make clean package DEBUG=0 FINALPACKAGE=1
+          make clean package DEBUG=0 FINALPACKAGE=1 ROOTLESS=1
           mv packages/*.deb ytplus.deb
 
       - name: Download YouTube Plus (by URL)
