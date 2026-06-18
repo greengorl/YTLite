@@ -125,10 +125,15 @@ jobs:
           # include path exposes YouTubeHeader at "YouTubeHeader/..." and the
           # YouTubeHeader repo already ships the GPB protobuf ObjC headers, so
           # rewrite both to the unqualified form.
+          # Also: the YouTubeHeader-vendored GPBUnknownFieldSet only exposes
+          # -getField:, not -hasField: like the upstream protobuf library does.
+          # For the truthiness checks used in YTNativeShare.x, -getField: is
+          # semantically equivalent to -hasField:, so rename it.
           find . -maxdepth 2 -type f \( -name '*.h' -o -name '*.x' -o -name '*.m' \) -print0 \
             | xargs -0 sed -i '' \
                 -e 's|\"\.\./YouTubeHeader/|\"YouTubeHeader/|g' \
-                -e 's|\"\.\./protobuf/objectivec/|\"YouTubeHeader/|g'
+                -e 's|\"\.\./protobuf/objectivec/|\"YouTubeHeader/|g' \
+                -e 's|\[\([A-Za-z_][A-Za-z0-9_]*\) hasField:|\[\1 getField:|g'
           make clean package DEBUG=0 FINALPACKAGE=1 ROOTLESS=1
           mv packages/*.deb ytplus.deb
 
