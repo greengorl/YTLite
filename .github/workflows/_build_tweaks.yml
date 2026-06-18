@@ -50,6 +50,8 @@ jobs:
 
     steps:
       - name: Install Dependencies
+        env:
+          HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
         run: brew install make ldid dpkg
 
       - name: Set PATH environment variable
