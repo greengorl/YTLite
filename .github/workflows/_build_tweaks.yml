@@ -54,6 +54,9 @@ jobs:
           HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
         run: brew install make ldid dpkg
 
+      - name: Checkout YTLite source
+        uses: actions/checkout@v6
+
       - name: Set PATH environment variable
         run: |
           echo "$(brew --prefix make)/libexec/gnubin" >> $GITHUB_PATH
