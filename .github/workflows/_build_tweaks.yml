@@ -95,6 +95,12 @@ jobs:
         run: |
           TWEAK_VERSION="${{ inputs.tweak_version }}"
           echo "::notice::Building YTLite from source as ${TWEAK_VERSION}-free"
+          echo "PWD: $(pwd)"
+          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
+          echo "Workspace contents:"
+          ls -la "${GITHUB_WORKSPACE}"
+          echo "---"
+          cd "${GITHUB_WORKSPACE}"
           # Tag the build with a -free suffix so it's identifiable and won't clash
           # with any installed subscription build of the same version.
           sed -i '' "s/^PACKAGE_VERSION = .*/PACKAGE_VERSION = ${TWEAK_VERSION}-free/" Makefile
